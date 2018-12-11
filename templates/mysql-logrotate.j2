@@ -1,0 +1,8 @@
+{{mysql_log_path}}/mysqld.log {
+        create 0644 mysql mysql
+        daily
+        rotate 14
+        copytruncate
+        compress
+        missingok
+}

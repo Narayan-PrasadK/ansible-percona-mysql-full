@@ -1,19 +1,9 @@
 ---
 # This role installs and sets up MySQL
-
 - include_tasks: variables.yml
   tags:
       - repl
       - importdb
-
-- name: Copy yum repos
-  copy:
-        src: "{{item}}"
-        dest: /etc/yum.repos.d/{{item | basename}}
-        backup: yes
-  with_fileglob:
-      - "repos/*"
-  tags: yum_repos
 
 - name: Copy template yum repos
   template:
@@ -67,9 +57,11 @@
   yum: 
       name: "{{mysql_install_packages}}"
       state: present
-      register: mysqld_installed
+      disablerepo: "remi,remi-php72,Altinity_clickhouse,czanik-syslog-ng39"
+  register: mysqld_installed
   when: ansible_os_family == "RedHat"
   tags: mysql
+#  notify: restart mysqld
 
 - name: Create MySQL dirs
   file:
@@ -90,7 +82,9 @@
   tags: mysql
 
 - name: Create mysql configuration file
-  template: src=mysqld.cnf.j2 dest=/etc/my.cnf
+  template:
+          src: mysqld.cnf.j2
+          dest: /etc/my.cnf
   tags: mysql
 
 - name: Init db
@@ -99,8 +93,18 @@
   tags: mysql
 
 - name: Start mysqld
-  service: name=mysqld state=started enabled=yes
+  service:
+          name: mysqld
+          state: started
+          enabled: yes
   tags: mysql
+
+- name: Configure logrotate for mysqld
+  template:
+      src: mysql-logrotate.j2
+      dest: /etc/logrotate.d/mysql
+      backup: yes
+  tags: logrotate
 
 - include_tasks: secure-installation.yml
   when: mysqld_installed.changed
