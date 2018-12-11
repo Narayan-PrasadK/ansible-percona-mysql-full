@@ -1,0 +1,54 @@
+---
+mysql_erase_mnt: 1
+mysql_mnt: /mnt/dbdir
+mysql_log_path: /var/log/mysql
+mysql_datadir: "{{mysql_mnt}}/mysql"
+mysql_binlogs: "{{mysql_mnt}}/mysql-logs"
+# for undo and innodb_logs dirs
+mysql_lib: /var/lib/mysql
+
+mysql_delete_old_db: 1
+
+mysql_innodb_buffer_pool_size: 64G
+mysql_innodb_buffer_pool_instances: 6
+
+mysql_remove_packages:
+    - Percona-Server-client-57
+    - Percona-Server-client-56
+    - Percona-Server-server-57
+    - Percona-Server-server-56
+    - Percona-Server-devel-56
+    - Percona-Server-devel-57
+    - mysql-community-libs-compat
+    - mysql-community-libs
+    - percona-xtrabackup
+    - percona-toolkit
+
+mysql_install_packages:
+    - Percona-Server-server-57
+    - Percona-Server-client-57
+    - percona-toolkit.x86_64
+    - percona-xtrabackup-24
+    - Percona-Server-client-57
+    - MySQL-python
+
+restore_from_dump: 1
+
+mysql_databases: []
+
+mysql_users: []
+
+mysql_root_password_update: yes
+mysql_user_password_update: yes
+mysql_user_name: ""
+mysql_root_home: ""
+mysql_root_username: root
+mysql_root_password: ""
+
+#mysql_replication_role: ''
+mysql_master_pat: db01
+mysql_slave_pat: db02
+mysql_replication_master: ""
+
+mysql_replication_user: {}
+

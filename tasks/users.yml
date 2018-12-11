@@ -1,0 +1,16 @@
+---
+- name: Create Application DB Users
+  mysql_user: 
+      name: "{{ item.name }}"
+      password: "{{ item.password }}"
+      priv: "{{ item.priv | default('*.*:USAGE') }}"
+      host: "{{ item.host | default('127.0.0.1') }}"
+      state: "{{ item.state | default('present') }}"
+      append_privs: "{{ item.append_privs | default('no') }}"
+      sql_log_bin: no
+#      login_host: 127.0.0.1
+#      login_host: localhost
+  loop: "{{ mysql_users }}"
+  become: yes
+  become_user: "{{mysql_user_name}}"
+  tags: myusers

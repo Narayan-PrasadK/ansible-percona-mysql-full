@@ -1,0 +1,16 @@
+---
+- name: Define master role
+  set_fact:
+      mysql_replication_role: master
+  when: mysql_master_pat in ansible_hostname
+  tags:
+      - repl
+      - importdb
+
+- name: Define slave role
+  set_fact:
+      mysql_replication_role: slave
+  when: mysql_slave_pat in ansible_hostname
+  tags:
+      - repl
+      - importdb

@@ -1,0 +1,145 @@
+---
+# This role installs and sets up MySQL
+
+- include_tasks: variables.yml
+  tags:
+      - repl
+      - importdb
+
+- name: Copy yum repos
+  copy:
+        src: "{{item}}"
+        dest: /etc/yum.repos.d/{{item | basename}}
+        backup: yes
+  with_fileglob:
+      - "repos/*"
+  tags: yum_repos
+
+- name: Copy template yum repos
+  template:
+      src: "{{item}}"
+      dest: /etc/yum.repos.d/{{ item | basename | regex_replace('\.j2','') }}
+  with_fileglob:
+      - ../templates/repo/*repo.j2
+  notify: yum clean
+  tags: yum_repos
+
+- name: Remove old mysql stuff
+  yum: 
+      name: "{{mysql_remove_packages}}"
+      state: absent
+  ignore_errors: true
+
+- name: Remove old files and dirs
+  file:
+      path: "{{item}}"
+      state: absent
+  loop:
+      - /var/lib/mysql
+  tags: mysql
+
+- name: create empty dir local
+  local_action:
+      module: file
+      state: directory
+      path: "/tmp/empty"
+  when: mysql_erase_mnt
+  tags: mysql
+
+- name: Empty remote /mnt/db directory
+  synchronize:
+      src: /tmp/empty/
+      dest: "{{mysql_mnt}}"
+      delete: yes
+      recursive: yes
+  when: mysql_erase_mnt
+  tags: mysql
+
+- name: copy mysql dumps to server
+  copy:
+        src: "{{item}}"
+        dest: "/tmp/"
+  with_fileglob:
+      - "{{playbook_dir}}/files/mysql/*.sql.gz"
+  tags: importdb
+
+- name: Install MySQL (RHEL)
+  yum: 
+      name: "{{mysql_install_packages}}"
+      state: present
+      register: mysqld_installed
+  when: ansible_os_family == "RedHat"
+  tags: mysql
+
+- name: Create MySQL dirs
+  file:
+      path: "{{item}}"
+      state: directory
+      recurse: yes
+      owner: mysql
+      group: mysql
+  loop:
+      - "{{mysql_log_path}}"
+      - "{{mysql_datadir}}"
+      - "{{mysql_binlogs}}/relay-log"
+      - "{{mysql_binlogs}}/bin-log"
+      - "{{mysql_lib}}"
+      - "{{mysql_lib}}/undo"
+      - "{{mysql_lib}}/innodb_logs"
+      - /var/run/mysqld
+  tags: mysql
+
+- name: Create mysql configuration file
+  template: src=mysqld.cnf.j2 dest=/etc/my.cnf
+  tags: mysql
+
+- name: Init db
+  command: "mysqld --defaults-file=/etc/my.cnf --datadir={{mysql_datadir}} --disable-log-bin --skip-slave-start --initialize-insecure --user=mysql"
+  when: mysqld_installed.changed
+  tags: mysql
+
+- name: Start mysqld
+  service: name=mysqld state=started enabled=yes
+  tags: mysql
+
+- include_tasks: secure-installation.yml
+  when: mysqld_installed.changed
+  tags: secure
+
+- include_tasks: users.yml
+  tags: myusers
+
+- include_tasks: replication.yml
+  tags: repl
+
+- name: Drop databases
+  mysql_db:
+      name: "{{item}}"
+      state: absent
+  loop: "{{mysql_databases}}"
+  become: yes
+  become_user: "{{mysql_user_name}}"
+  when: (mysql_replication_role == 'master') and mysql_delete_old_db and mysqld_installed.changed
+  tags: importdb
+
+- name: Create databases
+  mysql_db:
+      name: "{{item}}"
+      state: present
+  loop: "{{mysql_databases}}"
+  become: yes
+  become_user: "{{mysql_user_name}}"
+  when: mysql_replication_role == 'master'
+  tags: importdb
+
+- name: Restore database from dump
+  mysql_db:
+      name: "{{item}}"
+      state: import
+      target: "/tmp/{{item}}.sql.gz"
+  loop: "{{mysql_databases}}"
+  become: yes
+  become_user: "{{mysql_user_name}}"
+  when: restore_from_dump and (mysql_replication_role == 'master')
+  tags: importdb
+
