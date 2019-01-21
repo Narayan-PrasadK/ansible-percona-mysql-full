@@ -7,6 +7,8 @@ mysql_binlogs: "{{mysql_mnt}}/mysql-logs"
 # for undo and innodb_logs dirs
 mysql_lib: /var/lib/mysql
 
+mysql_bind_address: "0.0.0.0"
+
 mysql_delete_old_db: 1
 
 mysql_innodb_buffer_pool_size: 64G
@@ -48,7 +50,8 @@ mysql_root_password: ""
 #mysql_replication_role: ''
 mysql_master_pat: db01
 mysql_slave_pat: db02
-mysql_replication_master: ""
+mysql_single_server: "{{ ansible_play_hosts|length|bool }}"
+mysql_replication_master: "{{ ansible_play_hosts[0] }}"
 
 mysql_replication_user: {}
 

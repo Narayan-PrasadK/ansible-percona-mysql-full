@@ -7,7 +7,7 @@ symbolic-links=0
 log-error={{mysql_log_path}}/mysqld.log
 pid-file=/var/run/mysqld/mysqld.pid
 
-bind_address = 0.0.0.0
+bind_address = {{mysql_bind_address}}
 open-files-limit = 131070
 user    = mysql
 skip-external-locking
@@ -59,7 +59,7 @@ query_cache_min_res_unit = 0
 gtid_mode = ON
 enforce-gtid-consistency = true
 
-{% if mysql_replication_master %}
+{% if not mysql_single_server %}
 # Replication Settings
 {% if mysql_replication_role == 'master' %}
 server-id               = 10
