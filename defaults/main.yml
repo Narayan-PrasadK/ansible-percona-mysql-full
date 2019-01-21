@@ -52,6 +52,7 @@ mysql_master_pat: db01
 mysql_slave_pat: db02
 mysql_single_server: "{{ ansible_play_hosts|length|bool }}"
 mysql_replication_master: "{{ ansible_play_hosts[0] }}"
+mysql_replication_master_ip: "{{ hostvars[mysql_replication_master].ansible_default_ipv4.address }}"
 
 mysql_replication_user: {}
 
