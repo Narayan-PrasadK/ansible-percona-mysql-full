@@ -8,11 +8,11 @@ log-error={{mysql_log_path}}/mysqld.log
 pid-file=/var/run/mysqld/mysqld.pid
 
 bind_address = {{mysql_bind_address}}
-open-files-limit = 131070
+open-files-limit = {{mysql_fileslimit}}
 user    = mysql
 skip-external-locking
-back_log        = 4000
-key_buffer_size = 512M
+back_log        = {{mysql_back_log}}
+key_buffer_size = {{mysql_key_buffer_size}}
 max_allowed_packet = 64M
 max_connections        = 600
 table_open_cache = 1000

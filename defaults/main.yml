@@ -8,11 +8,13 @@ mysql_binlogs: "{{mysql_mnt}}/mysql-logs"
 mysql_lib: /var/lib/mysql
 
 mysql_bind_address: "0.0.0.0"
-
-mysql_delete_old_db: 1
-
+mysql_fileslimit: "131070"
+mysql_back_log: "4000"
+mysql_key_buffer_size: "512M"
 mysql_innodb_buffer_pool_size: 64G
 mysql_innodb_buffer_pool_instances: 6
+
+mysql_delete_old_db: 1
 
 mysql_remove_packages:
     - Percona-Server-client-57
